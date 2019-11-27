@@ -4,6 +4,7 @@ gem "jets"
 
 gem 'pg', '0.21.0'
 gem 'rest-client'
+gem 'aws-sdk', '~> 3'
 
 gem "dynomite"
 

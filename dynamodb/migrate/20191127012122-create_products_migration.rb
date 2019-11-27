@@ -2,7 +2,7 @@ class CreateProductsMigration < Dynomite::Migration
   def up
     create_table :products do |t|
       t.partition_key "id" # required
-      # t.sort_key "created_at" 
+      t.sort_key "created_at" 
 
       t.provisioned_throughput(5) # sets both read and write, defaults to 5 when not set
 

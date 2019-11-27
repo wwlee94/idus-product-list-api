@@ -1,16 +1,52 @@
 class ProductsController < ApplicationController
   before_action :set_product, only: [:show]
 
+  Aws.config.update({
+    region: "ap-northeast-2",
+    endpoint: "http://dynamodb.ap-northeast-2.amazonaws.com"
+  })
+
   # GET /products
   def index
-    @products = Product.scan
+    puts 'page 변수 존재!' if params[:page]
+  
+    dynamodb = Aws::DynamoDB::Client.new
 
-    render json: @products
+    params = {
+      table_name: 'idus-api-prod-products',
+      projection_expression: "id, title, seller, thumbnail_520",
+      limit: 50
+    }
+
+    product_list = []
+    begin
+      @products = dynamodb.scan(params)
+  
+        # product_list.push(@products.as_json)
+      # loop do 
+      #   @products = dynamodb.scan(params)
+      #   break if @products.last_evaluated_key.nil?
+
+      #   puts('Scanning for more ...')
+      #   params[:exclusive_start_key] = @products.last_evaluated_key
+
+      #   # product_list.push(@products.as_json)
+      # end
+    rescue Aws::DynamoDB::Errors::ServiceError => error
+      puts "Unable to scan:"
+      puts "#{error.message}"
+      render json: JSON.pretty_generate({ statusCode: 500, body: "#{error.message}"})
+    end
+
+    # @products = Product.scan(params)
+    response = { statusCode: 200, body: @products}
+    render json: JSON.pretty_generate(response)
   end
 
   # GET /products/1
   def show
-    render json: @product
+    response = { statusCode: 200, body: @product.as_json }
+    render json: JSON.pretty_generate(response)
   end
 
   # POST /products

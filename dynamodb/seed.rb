@@ -6,11 +6,14 @@ require 'aws-sdk'
 dynamodb = Aws::DynamoDB::Resource.new(region: 'ap-northeast-2')
 table = dynamodb.table('idus-api-prod-products')
 
-product_list = CSV.parse(File.read('idus_item_list.csv'), headers:true)
+$sort_id
+sort_id = 1
+product_list = CSV.parse(File.read('idus_item_list_copy.csv'), headers:true)
 product_list.each do |product|
     table.put_item({
         item: {
-            id: product["id"],
+            stat: "ok",
+            id: sort_id,
             title: product["title"],
             seller: product["seller"],
             thumbnail_520: product["thumbnail_520"],
@@ -19,8 +22,9 @@ product_list.each do |product|
             cost: product["cost"],
             discount_cost: product["discount_cost"],
             discount_rate: product["discount_rate"],
-            description: product["description"]
+            description: product["description"],
         }
-    })    
+    })
+    sort_id += 1
     puts(product["title"] + ' 추가 성공 !!')
 end

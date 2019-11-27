@@ -4,8 +4,8 @@ gem "jets"
 
 gem 'pg', '0.21.0'
 gem 'rest-client'
-gem 'aws-sdk', '~> 3'
-
+gem 'aws-record'
+gem 'aws-sdk'
 gem "dynomite"
 
 # development and test groups are not bundled as part of the deployment

@@ -3,8 +3,6 @@ class ProductsController < ApplicationController
 
   # GET /products
   def index
-    puts 'page 변수 존재!' if params[:page]
-  
     dynamodb = Aws::DynamoDB::Client.new
 
     param = {
@@ -14,37 +12,45 @@ class ProductsController < ApplicationController
       expression_attribute_values: {
         ":stat" => "ok"
       },
-      # page_size: 10
       limit: 10
     }
 
-    product_list = []
-    begin
-      @products = dynamodb.query(param)
-      
+    if params[:page].to_i > 1
+      puts 'page 변수 존재!' 
       # @products.items.each{ |product|
       #   product.transform_values(&:to_i)
       # }
-        # product_list.push(@products.as_json)
-      # loop do 
-      #   @products = dynamodb.scan(params)
-      #   break if @products.last_evaluated_key.nil?
+      start_id = (params[:page].to_i - 1) * 10
+      puts start_id
+      puts('Scanning for more ...')
 
-      #   puts('Scanning for more ...')
-      #   params[:exclusive_start_key] = @products.last_evaluated_key
+      param[:exclusive_start_key] = {
+        id: start_id,
+        stat: "ok"
+      }
 
-      #   # product_list.push(@products.as_json)
-      # end
-    rescue Aws::DynamoDB::Errors::ServiceError => error
-      puts "Unable to query index:"
-      puts "#{error.message}"
+      @products = dynamodb.query(param)
+
+      puts @products.items
+      puts @products.last_evaluated_key
+
+      response = { statusCode: 200, body: @products.items, last_evaluated_key: @products.last_evaluated_key }
+      render json: JSON.pretty_generate(response)
+
+    else
+      begin
+        @products = dynamodb.query(param)
+        response = { statusCode: 200, body: @products.items, last_evaluated_key: @products.last_evaluated_key }
+      rescue Aws::DynamoDB::Errors::ServiceError => error
+        puts "Unable to query index:"
+        puts "#{error.message}"
+        response = { statusCode: 500, body: "#{error.message}" }
+      end
+
+      response = { statusCode: 500, body: "interval server error !!" } if response.nil?
       
-      render json: { statusCode: 500, body: "#{error.message}"}
+      render json: JSON.pretty_generate(response)
     end
-
-    # @products = Product.scan(params)
-    response = { statusCode: 200, body: @products.items }
-    render json: JSON.pretty_generate(response)
   end
 
   # GET /products/1
@@ -52,17 +58,6 @@ class ProductsController < ApplicationController
     response = { statusCode: 200, body: @product.items }
     render json: JSON.pretty_generate(response)
   end
-
-  # # POST /products
-  # def create
-  #   @product = Product.new(product_params)
-
-  #   if @product.save
-  #     render json: @product, status: :created
-  #   else
-  #     render json: @product.errors, status: :unprocessable_entity
-  #   end
-  # end
 
   private
     # Use callbacks to share common setup or constraints between actions.
@@ -82,18 +77,20 @@ class ProductsController < ApplicationController
         rescue Aws::DynamoDB::Errors::ServiceError => error
           puts "Unable to query show:"
           puts "#{error.message}"
-          render json: { statusCode: 500, body: "#{error.message}"}
+          response = { statusCode: 500, body: "#{error.message}"} 
+          render json: JSON.pretty_generate(response)
         end
       else
         message = "'params[:id]' is not Integer !!"
         puts message
-        render json: { statusCode: 400, body: message }
+        response = { statusCode: 400, body: message }
+        render json: JSON.pretty_generate(response)
       end
     end
 
     # Only allow a trusted parameter "white list" through.
     def product_params
-      params.require(:product).permit(:stat, :id, :title, :seller, :thumbnail_520, :thumbnail_720, :thumbnail_list_320, :cost, :discount_cost, :discount_rate, :description)
+      params.require(:product).permit(:stat, :id, :title, :seller, :thumbnail_520, :thumbnail_720, :thumbnail_list_320, :cost, :discount_cost, :discount_rate, :description, :page)
     end
 
     def is_number? string

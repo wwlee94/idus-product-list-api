@@ -2,6 +2,8 @@ source "https://rubygems.org"
 
 gem "jets"
 
+gem 'pg', '0.21.0'
+gem 'rest-client'
 
 gem "dynomite"
 

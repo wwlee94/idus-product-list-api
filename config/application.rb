@@ -2,6 +2,15 @@ Jets.application.configure do
   config.project_name = "idus-api"
   config.mode = "api"
 
+  config.iam_policy = [
+    Jets::Application.default_iam_policy,
+    {
+      action: ['dynamodb:*'],
+      effect: 'Allow',
+      resource: "arn:aws:dynamodb:#{Jets.aws.region}:#{Jets.aws.account}:table/#{Jets.project_namespace}-*"
+    }
+  ]
+  
   config.prewarm.enable = true # default is true
   # config.prewarm.rate = '30 minutes' # default is '30 minutes'
   # config.prewarm.concurrency = 2 # default is 2
@@ -15,7 +24,7 @@ Jets.application.configure do
   # config.cors = true # for '*'' # defaults to false
   # config.cors = '*.mydomain.com' # for specific domain
 
-  # config.function.timeout = 30 # defaults to 30
+  config.function.timeout = 20 # defaults to 30
   # config.function.role = "arn:aws:iam::#{Jets.aws.account}:role/service-role/pre-created"
   # config.function.memory_size = 1536
 

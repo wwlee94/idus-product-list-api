@@ -20,3 +20,4 @@ test:
 
 production:
   table_namespace: <%= Jets.config.table_namespace %>
+  endpoint: http://dynamodb.ap-northeast-2.amazonaws.com

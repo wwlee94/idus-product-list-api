@@ -1,6 +1,11 @@
 class ProductsController < ApplicationController
   before_action :set_product, only: [:show]
 
+  rescue_from Exceptions::BadRequest, Exceptions::InternalServerError do |e|
+    response = { statusCode: e.status, body: e.message }
+    render json: JSON.pretty_generate(response)
+  end
+
   # GET /products
   def index
     dynamodb = Aws::DynamoDB::Client.new
@@ -14,15 +19,20 @@ class ProductsController < ApplicationController
       },
       limit: 10
     }
-
-    if params[:page].to_i > 1
+  
+    if params[:page]
       puts 'page 변수 존재!' 
+      raise Exceptions::ParameterIsNotInteger unless is_number? params[:page]
+
+      page_no = params[:page].to_i
+      raise Exceptions::PageUnderRequest if page_no <= 0
+
       # @products.items.each{ |product|
       #   product.transform_values(&:to_i)
       # }
       start_id = (params[:page].to_i - 1) * 10
-      puts start_id
-      puts('Scanning for more ...')
+
+      puts('Searching for more ...')
 
       param[:exclusive_start_key] = {
         id: start_id,
@@ -30,6 +40,8 @@ class ProductsController < ApplicationController
       }
 
       @products = dynamodb.query(param)
+
+      raise Exceptions::PageOverRequest if @products.items.blank?
 
       puts @products.items
       puts @products.last_evaluated_key
@@ -41,16 +53,18 @@ class ProductsController < ApplicationController
       begin
         @products = dynamodb.query(param)
         response = { statusCode: 200, body: @products.items, last_evaluated_key: @products.last_evaluated_key }
-      rescue Aws::DynamoDB::Errors::ServiceError => error
-        puts "Unable to query index:"
-        puts "#{error.message}"
-        response = { statusCode: 500, body: "#{error.message}" }
+      rescue Aws::DynamoDB::Errors::ServiceError => e
+        response = { statusCode: 500, body: "#{e.message}" }
       end
 
-      response = { statusCode: 500, body: "interval server error !!" } if response.nil?
+      raise Exceptions::InternalServerError if response.nil?
       
       render json: JSON.pretty_generate(response)
     end
+
+  rescue Exceptions::PageOverRequest => e
+    response = { statusCode: 400, body: e.message }
+    render json: JSON.pretty_generate(response)
   end
 
   # GET /products/1
@@ -63,27 +77,23 @@ class ProductsController < ApplicationController
     # Use callbacks to share common setup or constraints between actions.
     def set_product
       dynamodb = Aws::DynamoDB::Client.new
-      if is_number? params[:id]
-        param = {
-          table_name: 'idus-api-prod-products',
-          key_condition_expression: "stat = :stat and id = :id",
-          expression_attribute_values: {
-            ":stat" => "ok",
-            ":id" => params[:id].to_i
-          }
+      raise Exceptions::ParameterIsNotInteger unless is_number? params[:id]
+
+      id = params[:id].to_i
+      # raise Exceptions::BadRequest if id <= 0
+
+      param = {
+        table_name: 'idus-api-prod-products',
+        key_condition_expression: "stat = :stat and id = :id",
+        expression_attribute_values: {
+          ":stat" => "ok",
+          ":id" => id
         }
-        begin
-          @product = dynamodb.query(param)
-        rescue Aws::DynamoDB::Errors::ServiceError => error
-          puts "Unable to query show:"
-          puts "#{error.message}"
-          response = { statusCode: 500, body: "#{error.message}"} 
-          render json: JSON.pretty_generate(response)
-        end
-      else
-        message = "'params[:id]' is not Integer !!"
-        puts message
-        response = { statusCode: 400, body: message }
+      }
+      begin
+        @product = dynamodb.query(param)
+      rescue Aws::DynamoDB::Errors::ServiceError => error
+        response = { statusCode: 500, body: "#{error.message}"} 
         render json: JSON.pretty_generate(response)
       end
     end

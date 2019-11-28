@@ -8,7 +8,7 @@ table = dynamodb.table('idus-api-prod-products')
 
 $sort_id
 sort_id = 1
-product_list = CSV.parse(File.read('idus_item_list_copy.csv'), headers:true)
+product_list = CSV.parse(File.read('idus_item_list.csv'), headers:true)
 product_list.each do |product|
     table.put_item({
         item: {

@@ -17,7 +17,7 @@ class ProductsController < ApplicationController
       expression_attribute_values: {
         ":stat" => "ok"
       },
-      limit: 10
+      limit: 50
     }
   
     if params[:page]
@@ -30,7 +30,7 @@ class ProductsController < ApplicationController
       # @products.items.each{ |product|
       #   product.transform_values(&:to_i)
       # }
-      start_id = (params[:page].to_i - 1) * 10
+      start_id = (params[:page].to_i - 1) * 50
 
       puts('Searching for more ...')
 
@@ -46,13 +46,13 @@ class ProductsController < ApplicationController
       puts @products.items
       puts @products.last_evaluated_key
 
-      response = { statusCode: 200, body: @products.items, last_evaluated_key: @products.last_evaluated_key }
+      response = { statusCode: 200, body: @products.items }
       render json: JSON.pretty_generate(response)
 
     else
       begin
         @products = dynamodb.query(param)
-        response = { statusCode: 200, body: @products.items, last_evaluated_key: @products.last_evaluated_key }
+        response = { statusCode: 200, body: @products.items }
       rescue Aws::DynamoDB::Errors::ServiceError => e
         response = { statusCode: 500, body: "#{e.message}" }
       end

@@ -28,13 +28,13 @@ module Exceptions
   
     class PageOverRequest < BadRequest
         def message
-            "Request Error - Page Over !"
+            "Request Error - Page is over request !"
         end
     end
 
     class PageUnderRequest < BadRequest
         def message
-            "Request Error - Page Under !"
+            "Request Error - Page is starting from 1 !"
         end
     end
 

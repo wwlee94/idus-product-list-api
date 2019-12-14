@@ -1,6 +1,11 @@
 # 프로그래머스 Idus 앱 개발 과제 - 상품 목록 조회 API
 상품 목록을 ( 50개 ) 단위로 조회 할 수 있고, 상세 정보 조회와 페이징 기능을 가진 상품 목록 조회 API
 
+## 개발 과제 설명
+<img src="images/idus_앱개발과제.png" width="50%" height="50%"> 
+
+API를 사용하여 위와 같은 어플리케이션 개발 ( iOS or Android )
+
 # API REFERENCE
 
 ### BASE URL

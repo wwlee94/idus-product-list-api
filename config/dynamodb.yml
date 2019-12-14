@@ -7,6 +7,7 @@ development:
   # More examples:
   # table_namespace: demo-dev
 
+  # DynamoDB를 이용하기 위한 엔드포인트 ( 모두 동일 )
   endpoint: http://dynamodb.ap-northeast-2.amazonaws.com
   # endpoint: http://localhost:8000 # comment out if want to test with real dynamodb
   # on AWS. You can also set the DYNAMODB_ENDPOINT environment variable.

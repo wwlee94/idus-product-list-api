@@ -8,9 +8,7 @@ API를 사용하여 위와 같은 어플리케이션 개발 ( iOS or Android )
 
 # API REFERENCE
 
-### BASE URL
-- https://2jt4kq01ij.execute-api.ap-northeast-2.amazonaws.com/prod/
-
+### BASE URL (Deprecated !)
     > BASE URL 뒤에 원하는 리소스를 붙혀 사용합니다.  
     ex) {BASE URL}/products?page=10
 
